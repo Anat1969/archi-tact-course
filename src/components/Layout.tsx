@@ -18,7 +18,7 @@ export function Layout() {
 
   return (
     <div className="flex h-dvh flex-col md:flex-row">
-      <aside className="flex shrink-0 border-b border-border bg-sidebar md:w-60 md:flex-col md:border-b-0 md:border-l">
+      <aside className="flex shrink-0 border-b border-border bg-sidebar md:w-48 md:flex-col lg:w-60 md:border-b-0 md:border-l">
         <NavLink to="/" dir="ltr" className="flex items-center justify-end px-5 py-4 text-lg font-bold tracking-wide md:py-6">
           ARCHI<span className="text-primary">·</span>TACT
         </NavLink>

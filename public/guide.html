@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>איך בונים: ניהול משרד אדריכלים</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5;color:#111;direction:rtl}
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:#111;color:#fff;display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px 16px 12px;border-bottom:1px solid #2a2a2a}
+.logo h1{font-size:13px;font-weight:700;letter-spacing:2px;color:#fff}
+.logo p{font-size:10px;color:#666;margin-top:3px}
+.phase-label{padding:14px 16px 6px;font-size:9px;font-weight:700;letter-spacing:2px;color:#555;text-transform:uppercase}
+.step-btn{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border:none;background:none;color:#888;width:100%;text-align:right;font-size:12px;transition:all .15s}
+.step-btn:hover{color:#ccc;background:#1a1a1a}
+.step-btn.active{color:#fff;background:#1e1e1e}
+.step-btn.active .num{background:#f0d060;color:#111}
+.num{width:20px;height:20px;border-radius:50%;background:#222;color:#555;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-label{font-size:11px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:14px;font-weight:600}
+.topbar-nav{display:flex;gap:8px}
+.nav-btn{padding:7px 16px;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit}
+.nav-btn:hover{background:#f5f5f5}
+.nav-btn.primary{background:#111;color:#fff;border-color:#111}
+.nav-btn.primary:hover{background:#333}
+.content{flex:1;display:flex;overflow:hidden}
+.explain{width:380px;background:#fff;border-left:1px solid #e0e0e0;overflow-y:auto;padding:24px;flex-shrink:0}
+.explain h2{font-size:16px;font-weight:700;margin-bottom:6px}
+.explain .subtitle{font-size:12px;color:#888;margin-bottom:20px}
+.section-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:8px;margin-top:20px}
+.prompt-box{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:16px;margin-bottom:16px}
+.prompt-box .prompt-header{font-size:10px;font-weight:700;letter-spacing:1px;color:#888;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.copy-btn{background:#111;color:#fff;border:none;padding:4px 10px;border-radius:3px;font-size:10px;cursor:pointer;font-family:inherit}
+.copy-btn:hover{background:#333}
+.copy-btn.copied{background:#2a7a2a}
+.prompt-text{font-size:12px;line-height:1.7;color:#333;white-space:pre-wrap}
+.tip-box{background:#fffbea;border:1px solid #f0d060;border-radius:6px;padding:12px 14px;margin-top:16px}
+.tip-box p{font-size:12px;line-height:1.6;color:#555}
+.tip-box strong{color:#111}
+.explain-body p{font-size:12px;line-height:1.75;color:#333;margin-bottom:10px}
+.explain-body ul{padding-right:16px;margin-bottom:10px}
+.explain-body li{font-size:12px;line-height:1.75;color:#333;margin-bottom:4px}
+.explain-body strong{color:#111;font-weight:700}
+.demo-wrap{flex:1;background:#e8e8e8;overflow:hidden;display:flex;flex-direction:column}
+.browser-chrome{background:#2d2d2d;padding:10px 12px 0;flex-shrink:0}
+.bc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bc-dots{display:flex;gap:5px}
+.bc-dot{width:11px;height:11px;border-radius:50%}
+.bc-dot.red{background:#ff5f57}
+.bc-dot.yellow{background:#ffbd2e}
+.bc-dot.green{background:#27c93f}
+.bc-url{flex:1;background:#1a1a1a;border-radius:4px;padding:4px 10px;font-size:11px;color:#aaa;text-align:center}
+.bc-nav{display:flex;gap:1px;background:#1a1a1a;border-radius:6px 6px 0 0;overflow:hidden}
+.bc-tab{padding:7px 16px;font-size:11px;color:#888;cursor:pointer;border-left:1px solid #2d2d2d}
+.bc-tab.active{background:#0f1829;color:#fff}
+.app-frame{flex:1;overflow:hidden;background:#0f1829}
+#app-screen{height:100%;overflow-y:auto}
+#app-screen iframe{width:100%;height:100%;border:0;display:block}
+.frame-label{background:#fff;border-bottom:1px solid #e0e0e0;padding:8px 16px;font-size:12px;color:#555;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.frame-label b{color:#111}
+.frame-tag{background:#f0d060;color:#111;font-weight:700;font-size:10px;padding:2px 8px;border-radius:3px}
+.frame-tag.sketch{background:#e0e0e0}
+.app-nav{background:#0a1020;border-bottom:1px solid #1e2d4a;display:flex;align-items:center;padding:0 16px;height:46px;gap:4px}
+.app-nav .app-logo{font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;margin-left:16px}
+.app-nav-link{padding:6px 12px;border-radius:4px;font-size:11px;color:#8899aa;cursor:pointer;border:none;background:none;font-family:inherit}
+.app-nav-link:hover{background:#1e2d4a;color:#fff}
+.app-nav-link.active{background:#1e3a6e;color:#60aaff}
+.app-content{padding:20px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#162035;border-radius:8px;padding:14px 16px}
+.stat-label{font-size:10px;color:#8899aa;margin-bottom:4px}
+.stat-num{font-size:22px;font-weight:700;color:#fff}
+.stat-sub{font-size:10px;color:#60aaff;margin-top:2px}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-hdr h3{font-size:13px;font-weight:600;color:#fff}
+.btn-sm{background:#1e3a6e;color:#60aaff;border:none;padding:5px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit}
+.btn-sm:hover{background:#254d8a}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.proj-card{background:#162035;border-radius:8px;padding:14px}
+.proj-card h4{font-size:12px;font-weight:600;color:#fff;margin-bottom:4px}
+.proj-card .client{font-size:11px;color:#8899aa;margin-bottom:8px}
+.proj-card .budget{font-size:13px;font-weight:700;color:#60aaff}
+.proj-card .status{font-size:10px;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:6px}
+.status.active{background:#1a3d1a;color:#4caf50}
+.status.planning{background:#1a2d3d;color:#60aaff}
+.status.done{background:#2a2a2a;color:#888}
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+.search-input{background:#0a1020;border:1px solid #1e2d4a;border-radius:6px;padding:7px 12px;color:#fff;font-size:12px;font-family:inherit;flex:1;text-align:right}
+.search-input:focus{outline:none;border-color:#3a6aae}
+.search-input::placeholder{color:#445566}
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kb-col{background:#0a1020;border-radius:8px;padding:12px}
+.kb-col-hdr{font-size:11px;font-weight:700;color:#8899aa;letter-spacing:1px;margin-bottom:10px;text-align:center;padding:4px;border-radius:4px}
+.kb-col.todo .kb-col-hdr{background:#1e2d1e;color:#4caf50}
+.kb-col.doing .kb-col-hdr{background:#1e2a3d;color:#60aaff}
+.kb-col.done .kb-col-hdr{background:#2a2a2a;color:#888}
+.kb-card{background:#162035;border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.kb-card-info{flex:1}
+.kb-card-title{font-size:11px;color:#ccddef;font-weight:600}
+.kb-card-proj{font-size:10px;color:#8899aa;margin-top:2px}
+.kb-move-btn{background:#1e3a6e;color:#60aaff;border:none;width:26px;height:26px;border-radius:4px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:8px}
+.kb-move-btn:hover{background:#254d8a}
+.upload-zone{border:2px dashed #1e3a6e;border-radius:10px;padding:36px;text-align:center;cursor:pointer;margin-bottom:16px;transition:all .2s}
+.upload-zone:hover{border-color:#60aaff;background:#0d1a2e}
+.upload-zone.processing{border-color:#60aaff;animation:pulse 1s ease-in-out infinite}
+.upload-zone.done{border-color:#4caf50;background:#0d1a0d}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.upload-icon{font-size:36px;margin-bottom:10px}
+.upload-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px}
+.upload-sub{font-size:11px;color:#8899aa}
+.upload-btn{background:#1e3a6e;color:#60aaff;border:none;padding:8px 20px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;margin-top:12px}
+.upload-btn:hover{background:#254d8a}
+.extract-table{width:100%;border-collapse:collapse;margin-top:16px}
+.extract-table th{font-size:10px;color:#8899aa;text-align:right;padding:6px 10px;border-bottom:1px solid #1e2d4a}
+.extract-table td{font-size:11px;color:#ccddef;padding:7px 10px;border-bottom:1px solid #0d1829}
+.extract-table tr:hover td{background:#162035}
+.conf-btn{background:#2a7a2a;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;margin-top:12px}
+.conf-btn:hover{background:#1a5a1a}
+.conf-btn:disabled{background:#1e2d1e;color:#4caf50;cursor:default}
+.client-table{width:100%;border-collapse:collapse}
+.client-table th{font-size:10px;color:#8899aa;text-align:right;padding:7px 10px;border-bottom:1px solid #1e2d4a}
+.client-table td{font-size:11px;color:#ccddef;padding:8px 10px;border-bottom:1px solid #0d1829}
+.client-table tr:hover td{background:#162035}
+.schema-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.schema-table th{font-size:10px;color:#60aaff;text-align:right;padding:5px 10px;background:#0d1829;border:1px solid #1e2d4a}
+.schema-table td{font-size:10px;color:#ccddef;padding:5px 10px;border:1px solid #1e2d4a}
+.schema-table td .type{color:#9ad0ff;font-size:9px}
+.schema-table td .fk{color:#ff9933;font-size:9px}
+.table-name{font-size:11px;font-weight:700;color:#fff;margin-bottom:6px;margin-top:12px}
+.mvp-checks{margin:12px 0}
+.mvp-check{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#162035;border-radius:6px;margin-bottom:6px}
+.mvp-check .text{font-size:11px;color:#ccddef}
+.react-flow{background:#0a1020;border-radius:8px;padding:16px;margin-top:12px}
+.flow-title{font-size:10px;color:#8899aa;margin-bottom:12px}
+.flow-nodes{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.flow-node{background:#1e3a6e;color:#fff;font-size:10px;padding:5px 10px;border-radius:4px}
+.flow-arrow{color:#8899aa;font-size:14px}
+.progress-bar{height:3px;background:#e0e0e0;position:relative;overflow:hidden}
+.progress-fill{height:100%;background:#111;transition:width .4s}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="sidebar">
+  <div class="logo">
+    <h1>איך בונים</h1>
+    <p>מדריך בנייה לאפליקציית ARCHI·TACT</p>
+  </div>
+  <div class="phase-label">⬤ הגדרה</div>
+  <button class="step-btn active" onclick="go(0)" id="btn0"><span class="num">0</span><span class="step-label">אפיון ראשוני</span></button>
+  <button class="step-btn" onclick="go(1)" id="btn1"><span class="num">1</span><span class="step-label">סכמת מסד נתונים</span></button>
+  <button class="step-btn" onclick="go(2)" id="btn2"><span class="num">2</span><span class="step-label">הגדרת סביבה</span></button>
+  <div class="phase-label">⬤ בנייה</div>
+  <button class="step-btn" onclick="go(3)" id="btn3"><span class="num">3</span><span class="step-label">פרויקטים</span></button>
+  <button class="step-btn" onclick="go(4)" id="btn4"><span class="num">4</span><span class="step-label">לקוחות</span></button>
+  <button class="step-btn" onclick="go(5)" id="btn5"><span class="num">5</span><span class="step-label">לוח משימות</span></button>
+  <button class="step-btn" onclick="go(6)" id="btn6"><span class="num">6</span><span class="step-label">ייבוא מסמכים</span></button>
+  <button class="step-btn" onclick="go(7)" id="btn7"><span class="num">7</span><span class="step-label">דשבורד</span></button>
+  <button class="step-btn" onclick="go(8)" id="btn8"><span class="num">8</span><span class="step-label">חיבור ופריסה</span></button>
+</div>
+<div class="main">
+  <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+  <div class="topbar">
+    <span class="topbar-title" id="ttitle">שלב 0 — אפיון ראשוני</span>
+    <div class="topbar-nav">
+      <button class="nav-btn" onclick="prev()">→ הקודם</button>
+      <button class="nav-btn primary" onclick="next()">← הבא</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="explain" id="explain-panel"></div>
+    <div class="demo-wrap">
+      <div class="frame-label"><span class="frame-tag" id="ftag"></span><span id="ftext"></span></div>
+      <div class="browser-chrome">
+        <div class="bc-top">
+          <div class="bc-dots">
+            <div class="bc-dot red"></div>
+            <div class="bc-dot yellow"></div>
+            <div class="bc-dot green"></div>
+          </div>
+          <div class="bc-url" id="bcurl">archi-tact-course.vercel.app</div>
+        </div>
+        <div class="bc-nav"><div class="bc-tab active">ARCHI·TACT</div></div>
+      </div>
+      <div class="app-frame"><div id="app-screen"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+let CUR=0;
+const APP={
+  tasks:[
+    {id:1,title:'תכנון קומה 3',proj:'וילה כרמל',stage:'todo'},
+    {id:2,title:'תיאום חשמל',proj:'מגדל מסחרי',stage:'todo'},
+    {id:3,title:'חזיתות וגגות',proj:'שכונת גן',stage:'doing'},
+    {id:4,title:'אפיון ראשוני',proj:'וילה כרמל',stage:'doing'},
+    {id:5,title:'חוזה עם לקוח',proj:'Reit Capital',stage:'done'},
+    {id:6,title:'הגשת בקשת היתר',proj:'שכונת גן',stage:'done'},
+  ],
+  projects:[
+    {id:1,name:'וילה כרמל',client:'משפחת לוי',budget:'₪2.4M',status:'active'},
+    {id:2,name:'מגדל מסחרי',client:'Reit Capital',budget:'₪18M',status:'planning'},
+    {id:3,name:'שכונת גן',client:'עיריית רמת גן',budget:'₪45M',status:'done'},
+  ],
+  clients:[
+    {id:1,name:'משפחת לוי',phone:'050-111-2222',email:'levi@gmail.com',count:1},
+    {id:2,name:'Reit Capital',phone:'03-7654321',email:'info@reit.co.il',count:2},
+    {id:3,name:'עיריית רמת גן',phone:'03-6752211',email:'arch@rg.gov.il',count:1},
+    {id:4,name:'משפחת כהן',phone:'052-333-4444',email:'cohen@walla.co.il',count:0},
+  ],
+  pSearch:'',cSearch:'',uploadState:'idle'
+};
+function sLabel(s){return{active:'פעיל',planning:'תכנון',done:'הושלם'}[s]||s;}
+function go(n){
+  CUR=Math.max(0,Math.min(8,n));
+  document.querySelectorAll('.step-btn').forEach((b,i)=>b.classList.toggle('active',i===CUR));
+  document.getElementById('prog').style.width=((CUR/8)*100)+'%';
+  const titles=['שלב 0 — אפיון ראשוני','שלב 1 — סכמת מסד נתונים','שלב 2 — הגדרת סביבה','שלב 3 — פרויקטים','שלב 4 — לקוחות','שלב 5 — לוח משימות','שלב 6 — ייבוא מסמכים','שלב 7 — דשבורד','שלב 8 — חיבור ופריסה'];
+  document.getElementById('ttitle').textContent=titles[CUR];
+  renderExplain();renderDemo();
+}
+function next(){go(CUR+1);}
+function prev(){go(CUR-1);}
+const STEPS=[
+  {title:'אפיון ראשוני',subtitle:'מה בונים ולמה',
+   prompt:`בנה אפליקציית ניהול משרד אדריכלים בשם ARCHI·TACT.\n\nהמשתמשים: אדריכלים ומנהלי פרויקטים.\nשפה: עברית, RTL, מצב כהה.\n\nמה האפליקציה מנהלת:\n• פרויקטים — שם, לקוח, תקציב, סטטוס, תאריך יעד\n• לקוחות — שם, טלפון, מייל\n• משימות — כותרת, פרויקט, שלב\n\nהעמודים שצריך לבנות:\n• דשבורד עם סטטיסטיקות ומספרים\n• רשימת פרויקטים עם חיפוש וכרטיסיות\n• רשימת לקוחות עם חיפוש\n• לוח משימות חזותי — Kanban\n• ייבוא מסמכים עם AI\n\nטכנולוגיות: React עם TypeScript, Tailwind CSS, Supabase, Vercel.`,
+   tip:'<strong>עצה:</strong> הפרומפט הזה הוא כמו תוכנית עבודה. ככל שתגדיר יותר בהתחלה — כך Claude Code יבנה בדיוק מה שרצית, בלי לנחש.'},
+  {title:'סכמת מסד נתונים',subtitle:'4 טבלאות ב-Supabase',
+   prompt:`עכשיו צור את מסד הנתונים ב-Supabase.\n\nשאל אותי: מה שם הפרויקט ב-Supabase שלך?\nכשאני אתן לך את השם — תיצור את כל הטבלאות אוטומטית.\n\nהטבלאות הנדרשות:\n• clients — מזהה, שם, טלפון, מייל\n• projects — מזהה, שם, לקוח (מקושר ל-clients), תקציב, סטטוס, תאריך יעד\n• tasks — מזהה, כותרת, פרויקט (מקושר ל-projects), שלב\n• documents — מזהה, קישור לקובץ, פרויקט (מקושר ל-projects), נתונים שחולצו, סטטוס\n\nכל טבלה מחוברת לאחרות דרך Foreign Keys.\nהפעל הגנת Row Level Security על כל הטבלאות.`,
+   tip:'<strong>Supabase Connector:</strong> כשיש לך Supabase מחובר ל-Claude Code — הוא יוצר את הטבלאות אוטומטית. לא צריך לכתוב SQL בעצמך.'},
+  {title:'הגדרת סביבה',subtitle:'GitHub + Vercel + משתני סביבה',
+   prompt:`הגדר את סביבת הפיתוח לאפליקציה.\n\nצעד ראשון — GitHub:\n• צור ריפוזיטורי חדש בשם archi-tact\n• קבע את מבנה התיקיות: src/components, src/pages, src/lib\n\nצעד שני — Vercel:\n• חבר את הריפוזיטורי ל-Vercel\n• כל push ל-main יפרוס אוטומטית\n\nצעד שלישי — משתני סביבה:\n• שאל אותי על מפתחות ה-API הנדרשים\n• הוסף את המפתחות ל-Vercel ו-Claude Code\n\nאחרי ההגדרה: שלח לי את כתובת ה-URL של הפרויקט.`,
+   tip:'<strong>עצה:</strong> לא צריך לעשות את זה ידנית — Claude Code + Vercel Connector יטפלו בהגדרה. תן רק אישורים כשנדרש.'},
+  {title:'עמוד פרויקטים',subtitle:'כרטיסיות עם חיפוש חי',
+   prompt:`בנה עמוד ניהול פרויקטים.\n\nהעמוד יציג:\n• שדה חיפוש בראש — סינון לפי שם פרויקט או שם לקוח\n• רשת כרטיסיות — כל כרטיסייה עם: שם הפרויקט, שם הלקוח, תקציב, ומדבקת סטטוס\n• כפתור "פרויקט חדש" — פתיחת טופס הוספה\n• צבעי הסטטוס: פעיל=ירוק, תכנון=כחול, הושלם=אפור\n\nבנה כך שהחיפוש עובד בזמן אמת — כל הקלדה מסננת את הכרטיסיות מיידית.\nשמור את הנתונים ב-Supabase.`,
+   tip:'<strong>חיפוש חי:</strong> כל אות שמקלידים — הרשימה מסתננת. נסה את זה עכשיו בדמו!'},
+  {title:'עמוד לקוחות',subtitle:'טבלת לקוחות עם חיפוש',
+   prompt:`בנה עמוד ניהול לקוחות.\n\nהעמוד יציג:\n• שדה חיפוש — סינון לפי שם לקוח\n• טבלה עם עמודות: שם, טלפון, מייל, מספר פרויקטים\n• שורת לקוח — לחיצה עליה תפתח כרטיס עם כל הפרויקטים שלו\n• כפתור "לקוח חדש" — טופס הוספה\n\nכל הנתונים מגיעים מ-Supabase.\nעמודת "פרויקטים" ספורה אוטומטית לפי מספר הפרויקטים המקושרים.`,
+   tip:'<strong>Foreign Key:</strong> כשמוחקים לקוח — הפרויקטים שלו לא נמחקים. ה-Foreign Key שמנו בשלב 1 מגן על הנתונים.'},
+  {title:'לוח משימות — Kanban',subtitle:'ניהול משימות ויזואלי',kanbanExplain:true,
+   prompt:`בנה לוח משימות חזותי — Kanban.\n\nהלוח מחולק לשלוש עמודות:\n• לביצוע — משימות שעוד לא התחילו\n• בתהליך — משימות שרצות עכשיו\n• הושלם — משימות שנסגרו\n\nכל משימה מוצגת כרטיסייה עם כפתור ← שמקדם אותה לעמודה הבאה.\nאין צורך בגרירה — הכפתור מספיק.\nשמור כל שינוי ב-Supabase.\nהלוח יתעדכן אוטומטית לכל המשתמשים דרך Supabase Realtime.`,
+   tip:'<strong>Realtime:</strong> Supabase מאפשר עדכון מיידי לכל המשתמשים — ללא רענון. כמו Google Docs.'},
+  {title:'ייבוא מסמכים',subtitle:'AI שמחלץ נתונים מקבצים',
+   prompt:`בנה עמוד ייבוא מסמכים עם AI.\n\nהזרימה שצריך לבנות:\n1. אזור גרירה להעלאת קובץ (Word, Excel, PDF, CSV)\n2. לאחר העלאה — שלח את תוכן הקובץ ל-Edge Function שבנינו ב-Supabase\n3. ה-Edge Function שולחת את הטקסט ל-Claude API ומבקשת לחלץ ממנו רשימה מסודרת\n4. הצג את התוצאה בטבלת תצוגה מקדימה — "Claude זיהה X רשומות"\n5. כפתור "אשר ויבא" — שומר את כל הרשומות ב-Supabase\n\nשאל אותי: לאיזו טבלה לייבא? (לקוחות / פרויקטים / משימות)\nהמתן לתשובה לפני הבנייה.`,
+   tip:'<strong>Edge Function:</strong> קוד שרץ בשרת Supabase. הוא שולח את הקובץ ל-Claude ומקבל נתונים מובנים בחזרה.'},
+  {title:'דשבורד ראשי',subtitle:'מבט כולל על המשרד',
+   prompt:`בנה את הדשבורד הראשי של האפליקציה.\n\nהדשבורד יציג:\n• 4 כרטיסי סטטיסטיקה: סך פרויקטים, פרויקטים פעילים, משימות פתוחות, לקוחות\n• רשימת הפרויקטים האחרונים — 3 פרויקטים עם סטטוס\n• רשימת המשימות הדחופות — 3 משימות שמועד היעד שלהן מתקרב\n• עדכון אוטומטי כל 30 שניות\n\nכל הנתונים מגיעים מ-Supabase.\nהדשבורד הוא עמוד הבית — הוא נטען ראשון כשנכנסים לאפליקציה.`,
+   tip:'<strong>עצה:</strong> הדשבורד הוא פני האפליקציה. נסה ללחוץ על הקישורים בתפריט הפנימי.'},
+  {title:'חיבור ופריסה',subtitle:'מייצרים MVP שלם',
+   prompt:`חבר את כל עמודי האפליקציה לאחד והפרס לייצור.\n\nצעד ראשון — ניווט:\n• הוסף React Router כדי לחבר בין כל העמודים\n• תפריט צד קבוע שמוצג בכל עמוד\n• כפתור התנתקות בפינה\n\nצעד שני — אימות:\n• הפעל Supabase Auth עם Google Sign-In\n• עמוד התחברות עם כפתור "התחבר עם Google"\n• הפנייה אוטומטית לדשבורד לאחר ההתחברות\n\nצעד שלישי — פריסה:\n• בדוק שכל הנתיבים עובדים\n• פרוס ל-Vercel\n• שתף איתי את הכתובת הסופית`,
+   tip:'<strong>MVP:</strong> Minimum Viable Product — גרסה מינימלית עובדת. לא מושלמת, אבל שימושית. ✓'},
+];
+function copyPrompt(idx){
+  navigator.clipboard.writeText(STEPS[idx].prompt).then(()=>{
+    const btn=document.getElementById('cpbtn'+idx);
+    if(btn){btn.textContent='✓ הועתק';btn.classList.add('copied');setTimeout(()=>{btn.textContent='העתק';btn.classList.remove('copied');},2000);}
+  });
+}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderExplain(){
+  const s=STEPS[CUR];
+  let h=`<h2>${s.title}</h2><div class="subtitle">${s.subtitle}</div>`;
+  if(s.kanbanExplain){
+    h+=`<div class="section-title">מהו Kanban?</div>
+    <div class="explain-body">
+      <p><strong>Kanban</strong> הוא לוח ניהול משימות ויזואלי שמקורו בתעשיית הרכב היפנית.</p>
+      <p>כל <strong>משימה</strong> היא כרטיסייה. הלוח מחולק ל<strong>עמודות</strong> שמייצגות שלב ביצוע.</p>
+      <ul>
+        <li><strong>לביצוע</strong> — משימות שעוד לא התחילו</li>
+        <li><strong>בתהליך</strong> — משימות שרצות עכשיו</li>
+        <li><strong>הושלם</strong> — משימות שנסגרו</li>
+      </ul>
+      <p>לחיצה על <strong>←</strong> מקדמת כרטיסייה לעמודה הבאה. נסה עכשיו בדמו!</p>
+    </div>`;
+  }
+  h+=`<div class="section-title">פרומפט ל-Claude Code</div>
+  <div class="prompt-box">
+    <div class="prompt-header">
+      <span>להעתקה ולהדבקה ב-Claude Code</span>
+      <button class="copy-btn" id="cpbtn${CUR}" onclick="copyPrompt(${CUR})">העתק</button>
+    </div>
+    <div class="prompt-text">${esc(s.prompt)}</div>
+  </div>`;
+  if(s.tip)h+=`<div class="tip-box"><p>${s.tip}</p></div>`;
+  document.getElementById('explain-panel').innerHTML=h;
+}
+function appNav(active){
+  const links=[{label:'דשבורד',key:'dashboard',step:7},{label:'פרויקטים',key:'projects',step:3},{label:'לקוחות',key:'clients',step:4},{label:'משימות',key:'tasks',step:5},{label:'ייבוא',key:'upload',step:6}];
+  return`<div class="app-nav"><span class="app-logo">ARCHI·TACT</span>${links.map(l=>`<button class="app-nav-link${l.key===active?' active':''}" onclick="go(${l.step})">${l.label}</button>`).join('')}</div>`;
+}
+const LIVE={3:'/projects',4:'/clients',5:'/tasks',6:'/upload',7:'/'};
+function renderDemo(){
+  const path=LIVE[CUR];
+  const tag=document.getElementById('ftag'),text=document.getElementById('ftext');
+  document.getElementById('bcurl').textContent=location.host+(path&&path!=='/'?path:'');
+  if(path){
+    tag.textContent='האפליקציה החיה';tag.className='frame-tag';
+    text.innerHTML='זו <b>ARCHI·TACT האמיתית</b>, לא ציור. אפשר ללחוץ, לחפש ולהוסיף בה.';
+    document.getElementById('app-screen').innerHTML='<iframe title="ARCHI·TACT" src="'+path+'"></iframe>';
+    return;
+  }
+  tag.textContent='המחשה';tag.className='frame-tag sketch';
+  text.innerHTML='השלב הזה קורה <b>מחוץ לאפליקציה</b>. המסך כאן הוא המחשה בלבד.';
+  const screens=[rSpec,rSchema,rEnv,rProjects,rClients,rKanban,rUpload,rDashboard,rMVP];
+  document.getElementById('app-screen').innerHTML=screens[CUR]();
+}
+function rSpec(){
+  return appNav('dashboard')+`<div class="app-content"><div style="max-width:600px">
+    <div style="font-size:11px;color:#8899aa;margin-bottom:20px">מסך: אפיון ראשוני</div>
+    <div style="background:#162035;border-radius:10px;padding:24px">
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:16px">ARCHI·TACT</div>
+      ${['פרויקטים','לקוחות','משימות','ייבוא מסמכים','דשבורד'].map((f,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;background:#0a1020;border-radius:6px;padding:10px 14px;margin-bottom:6px">
+        <span style="color:#60aaff;font-weight:700;font-size:12px">${i+1}</span>
+        <span style="font-size:12px;color:#ccddef">${f}</span>
+        <span style="margin-right:auto;font-size:10px;color:#4caf50">✓ מתוכנן</span>
+      </div>`).join('')}
+      <div style="margin-top:16px;font-size:11px;color:#8899aa;line-height:1.6">React + TypeScript · Tailwind CSS · Supabase · Vercel</div>
+    </div>
+  </div></div>`;
+}
+function rSchema(){
+  const tables=[
+        {name:'clients',cols:[['id','uuid',''],['name','text',''],['phone','text',''],['email','text','']]},
+    {name:'projects',cols:[['id','uuid',''],['name','text',''],['client_id','uuid','→ clients'],['budget','numeric',''],['status','text',''],['deadline','date','']]},
+    {name:'tasks',cols:[['id','uuid',''],['title','text',''],['project_id','uuid','→ projects'],['stage','text','']]},
+    {name:'documents',cols:[['id','uuid',''],['file_url','text',''],['project_id','uuid','→ projects'],['extracted_data','jsonb',''],['status','text','']]},
+  ];
+  return appNav('dashboard')+`<div class="app-content">
+    <div style="font-size:11px;color:#8899aa;margin-bottom:16px">מסך: Supabase Table Editor</div>
+    ${tables.map(t=>`<div class="table-name">${t.name}</div>
+    <table class="schema-table">
+      <tr><th>שדה</th><th>סוג</th><th>קישור</th></tr>
+      ${t.cols.map(c=>`<tr><td>${c[0]}</td><td><span class="type">${c[1]}</span></td><td>${c[2]?`<span class="fk">${c[2]}</span>`:''}</td></tr>`).join('')}
+    </table>`).join('')}
+    <div style="margin-top:12px;font-size:10px;color:#4caf50">✓ Row Level Security מופעל על כל הטבלאות</div>
+  </div>`;
+}
+function rEnv(){
+  return appNav('dashboard')+`<div class="app-content">
+    <div style="font-size:11px;color:#8899aa;margin-bottom:16px">מסך: הגדרת סביבה</div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:500px">
+      ${[['GitHub Repository','anat/archi-tact'],['Vercel Project','archi-tact.vercel.app'],['SUPABASE_URL','https://xxxx.supabase.co'],['SUPABASE_ANON_KEY','eyJhbGciOiJIUzI1NiIs...'],['ANTHROPIC_API_KEY','sk-ant-api03-...']]
+      .map(r=>`<div style="background:#162035;border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:12px">
+        <span style="color:#4caf50;font-size:14px">✓</span>
+        <div><div style="font-size:11px;color:#8899aa">${r[0]}</div><div style="font-size:11px;color:#ccddef;font-family:monospace">${r[1]}</div></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function rProjects(){
+  const q=APP.pSearch.toLowerCase();
+  const f=APP.projects.filter(p=>p.name.includes(q)||p.client.includes(q));
+  return appNav('projects')+`<div class="app-content">
+    <div class="section-hdr"><h3>פרויקטים</h3><button class="btn-sm">+ פרויקט חדש</button></div>
+    <div class="search-row">
+      <input class="search-input" placeholder="חפש לפי שם פרויקט או לקוח..." value="${esc(APP.pSearch)}" oninput="APP.pSearch=this.value;fProj()" />
+    </div>
+    <div class="card-grid" id="proj-grid">${pCards(f)}</div>
+  </div>`;
+}
+function pCards(list){
+  return list.map(p=>`<div class="proj-card"><h4>${p.name}</h4><div class="client">לקוח: ${p.client}</div><div class="budget">${p.budget}</div><span class="status ${p.status}">${sLabel(p.status)}</span></div>`).join('')
+  ||`<div style="color:#8899aa;font-size:12px;padding:20px">לא נמצאו תוצאות</div>`;
+}
+function fProj(){const g=document.getElementById('proj-grid');if(!g)return;const q=APP.pSearch.toLowerCase();g.innerHTML=pCards(APP.projects.filter(p=>p.name.includes(q)||p.client.includes(q)));}
+function rClients(){
+  const q=APP.cSearch.toLowerCase();
+  const f=APP.clients.filter(c=>c.name.toLowerCase().includes(q));
+  return appNav('clients')+`<div class="app-content">
+    <div class="section-hdr"><h3>לקוחות</h3><button class="btn-sm">+ לקוח חדש</button></div>
+    <div class="search-row">
+      <input class="search-input" placeholder="חפש לפי שם לקוח..." value="${esc(APP.cSearch)}" oninput="APP.cSearch=this.value;fClients()" />
+    </div>
+    <table class="client-table"><tr><th>שם</th><th>טלפון</th><th>מייל</th><th>פרויקטים</th></tr>
+    <tbody id="client-tbody">${cRows(f)}</tbody></table>
+  </div>`;
+}
+function cRows(list){
+  return list.map(c=>`<tr><td style="font-weight:600">${c.name}</td><td>${c.phone}</td><td>${c.email}</td><td><span style="background:#1e3a6e;color:#60aaff;border-radius:10px;padding:2px 10px;font-size:10px">${c.count}</span></td></tr>`).join('')
+  ||`<tr><td colspan="4" style="color:#8899aa;padding:20px">לא נמצאו לקוחות</td></tr>`;
+}
+function fClients(){const b=document.getElementById('client-tbody');if(!b)return;const q=APP.cSearch.toLowerCase();b.innerHTML=cRows(APP.clients.filter(c=>c.name.toLowerCase().includes(q)));}
+function rKanban(){
+  const cols=[{key:'todo',label:'לביצוע'},{key:'doing',label:'בתהליך'},{key:'done',label:'הושלם'}];
+  return appNav('tasks')+`<div class="app-content">
+    <div class="section-hdr"><h3>לוח משימות</h3><button class="btn-sm">+ משימה</button></div>
+    <div class="kanban">
+      ${cols.map(col=>`<div class="kb-col ${col.key}">
+        <div class="kb-col-hdr">${col.label}</div>
+        ${APP.tasks.filter(t=>t.stage===col.key).map(t=>`
+        <div class="kb-card">
+          ${col.key!=='done'?`<button class="kb-move-btn" onclick="moveTask(${t.id})">←</button>`:'<div style="width:34px"></div>'}
+          <div class="kb-card-info"><div class="kb-card-title">${t.title}</div><div class="kb-card-proj">${t.proj}</div></div>
+        </div>`).join('')||`<div style="color:#445566;font-size:11px;padding:10px;text-align:center">ריק</div>`}
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function moveTask(id){
+  const t=APP.tasks.find(t=>t.id===id);if(!t)return;
+  const nx={todo:'doing',doing:'done',done:'todo'};t.stage=nx[t.stage];
+  document.getElementById('app-screen').innerHTML=rKanban();
+}
+function rUpload(){
+  const st=APP.uploadState;
+  const extractData=[
+    {name:'משפחת רוזן',phone:'054-222-3333',email:'rosen@gmail.com'},
+    {name:'טק ביזנס',phone:'03-1234567',email:'tb@techbiz.co.il'},
+    {name:'עיריית נתניה',phone:'09-8765432',email:'build@netanya.gov.il'},
+    {name:'קבוצת רשת',phone:'072-111-9999',email:'info@reshet.co.il'},
+  ];
+  let zone='';
+  if(st==='idle') zone=`<div class="upload-icon">📄</div><div class="upload-title">גרור קובץ לכאן</div><div class="upload-sub">Word, Excel, PDF, CSV</div><button class="upload-btn" onclick="triggerUpload()">בחר קובץ</button>`;
+  else if(st==='processing') zone=`<div class="upload-icon">⏳</div><div class="upload-title" style="color:#60aaff">Claude מנתח את הקובץ...</div><div class="upload-sub">מחלץ נתונים מהמסמך</div>`;
+  else zone=`<div class="upload-icon">✅</div><div class="upload-title" style="color:#4caf50">Claude זיהה 4 רשומות</div><div class="upload-sub">תצוגה מקדימה לפני ייבוא</div>`;
+  return appNav('upload')+`<div class="app-content">
+    <div class="section-hdr"><h3>ייבוא מסמכים</h3></div>
+    <div style="font-size:11px;color:#8899aa;margin-bottom:12px">ייבוא לטבלה: <strong style="color:#60aaff">לקוחות</strong></div>
+    <div class="upload-zone ${st}" onclick="${st==='idle'?'triggerUpload()':''}">${zone}</div>
+    ${st==='done'?`
+    <table class="extract-table">
+      <tr><th>שם</th><th>טלפון</th><th>מייל</th></tr>
+      ${extractData.map(r=>`<tr><td>${r.name}</td><td>${r.phone}</td><td>${r.email}</td></tr>`).join('')}
+    </table>
+    <button class="conf-btn" id="confbtn" onclick="confirmImport()">✓ אשר ויבא 4 לקוחות</button>
+    <button style="background:none;border:none;color:#8899aa;font-size:11px;cursor:pointer;margin-right:10px" onclick="APP.uploadState='idle';renderDemo()">ביטול</button>
+    `:''}
+  </div>`;
+}
+function triggerUpload(){
+  if(APP.uploadState!=='idle')return;
+  APP.uploadState='processing';renderDemo();
+  setTimeout(()=>{APP.uploadState='done';renderDemo();},1800);
+}
+function confirmImport(){
+  const btn=document.getElementById('confbtn');
+  if(btn){btn.textContent='✓ יובאו 4 לקוחות בהצלחה!';btn.disabled=true;btn.style.background='#1a3d1a';}
+}
+function rDashboard(){
+  const stats=[
+    {label:'פרויקטים',num:APP.projects.length,sub:'סה"כ'},
+    {label:'פעילים',num:APP.projects.filter(p=>p.status==='active').length,sub:'עכשיו'},
+    {label:'משימות',num:APP.tasks.filter(t=>t.stage!=='done').length,sub:'פתוחות'},
+    {label:'לקוחות',num:APP.clients.length,sub:'רשומים'},
+  ];
+  return appNav('dashboard')+`<div class="app-content">
+    <div class="stat-grid">${stats.map(s=>`<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-num">${s.num}</div><div class="stat-sub">${s.sub}</div></div>`).join('')}</div>
+    <div class="section-hdr"><h3>פרויקטים אחרונים</h3><button class="btn-sm" onclick="go(3)">הכל</button></div>
+    <div class="card-grid" style="margin-bottom:20px">
+      ${APP.projects.slice(0,3).map(p=>`<div class="proj-card"><h4>${p.name}</h4><div class="client">${p.client}</div><div class="budget">${p.budget}</div><span class="status ${p.status}">${sLabel(p.status)}</span></div>`).join('')}
+    </div>
+    <div class="section-hdr"><h3>משימות פתוחות</h3><button class="btn-sm" onclick="go(5)">לוח Kanban</button></div>
+    ${APP.tasks.filter(t=>t.stage!=='done').slice(0,3).map(t=>`
+    <div style="background:#162035;border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:12px;color:#ccddef;font-weight:600">${t.title}</div><div style="font-size:10px;color:#8899aa">${t.proj}</div></div>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${t.stage==='todo'?'#1e3d1e':'#1e2a3d'};color:${t.stage==='todo'?'#4caf50':'#60aaff'}">${t.stage==='todo'?'לביצוע':'בתהליך'}</span>
+    </div>`).join('')}
+  </div>`;
+}
+function rMVP(){
+  const checks=['React Router — ניווט בין עמודים','Supabase Auth — התחברות עם Google','עמוד פרויקטים עם חיפוש','עמוד לקוחות עם חיפוש','לוח Kanban עם כפתור קידום','ייבוא מסמכים עם AI','דשבורד עם סטטיסטיקות','פריסה ל-Vercel'];
+  return appNav('dashboard')+`<div class="app-content">
+    <div style="font-size:11px;color:#8899aa;margin-bottom:12px">MVP — גרסה מינימלית עובדת</div>
+    <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:16px">ARCHI·TACT v1.0 ✓</div>
+    <div class="mvp-checks">${checks.map(c=>`<div class="mvp-check"><span style="color:#4caf50;margin-left:auto">✓</span><span class="text">${c}</span></div>`).join('')}</div>
+    <div class="react-flow">
+      <div class="flow-title">מבנה הניווט</div>
+      <div class="flow-nodes">
+        <span class="flow-node">דשבורד</span><span class="flow-arrow">→</span>
+        <span class="flow-node">פרויקטים</span><span class="flow-arrow">→</span>
+        <span class="flow-node">לקוחות</span><span class="flow-arrow">→</span>
+        <span class="flow-node">משימות</span><span class="flow-arrow">→</span>
+        <span class="flow-node">ייבוא</span>
+      </div>
+    </div>
+    <div style="margin-top:16px;background:#162035;border-radius:8px;padding:14px">
+      <div style="font-size:11px;color:#8899aa;margin-bottom:6px">כתובת לייצור</div>
+      <div style="font-size:13px;color:#60aaff;font-weight:600">archi-tact.vercel.app</div>
+    </div>
+  </div>`;
+}
+go(0);
+</script>
+</body>
+</html>
