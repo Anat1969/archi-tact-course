@@ -27,7 +27,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Link key={stat.label} to={stat.to} className="rounded-xl bg-card p-4 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary">
+          <Link key={stat.label} to={stat.to} className="rounded-xl bg-card p-4 ring-1 ring-border transition hover:ring-primary">
             <p className="text-sm text-muted-foreground">{stat.label}</p>
             <p className={cn('mt-2 text-2xl font-bold sm:text-3xl', stat.highlight && 'text-primary')}>{stat.value}</p>
           </Link>

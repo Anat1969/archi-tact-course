@@ -1,4 +1,5 @@
 import { CalendarRange, FileUp, FolderKanban, GraduationCap, LayoutDashboard, ListChecks, Users } from 'lucide-react'
+import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Backstage } from '@/components/Backstage'
 import { GuidePanel } from '@/components/GuidePanel'
@@ -8,7 +9,7 @@ import { useStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
 const NAV = [
-  { to: '/', label: 'דשבורד', icon: LayoutDashboard, subtitle: 'תמונת מצב של המשרד' },
+  { to: '/dashboard', label: 'דשבורד', icon: LayoutDashboard, subtitle: 'תמונת מצב של המשרד' },
   { to: '/projects', label: 'פרויקטים', icon: FolderKanban, subtitle: 'כל הפרויקטים של המשרד' },
   { to: '/clients', label: 'לקוחות', icon: Users, subtitle: 'פרטי קשר ופרויקטים לכל לקוח' },
   { to: '/tasks', label: 'לוח משימות', icon: ListChecks, subtitle: 'לביצוע, בתהליך, הושלם' },
@@ -20,7 +21,7 @@ const NAV = [
 function AppShell({ compact }: { compact: boolean }) {
   const { pathname } = useLocation()
   const { source, loading, error } = useStore()
-  const current = NAV.find((item) => (item.to === '/' ? pathname === '/' : pathname.startsWith(item.to))) ?? NAV[0]
+  const current = NAV.find((item) => pathname.startsWith(item.to)) ?? NAV[0]
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-background text-foreground md:flex-row">
@@ -33,7 +34,6 @@ function AppShell({ compact }: { compact: boolean }) {
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
               title={label}
               className={({ isActive }) =>
                 cn(
@@ -79,14 +79,20 @@ function AppShell({ compact }: { compact: boolean }) {
 export function Layout() {
   const guide = useGuide()
   const { pathname } = useLocation()
+  // הכתובת קובעת מה מוצג: /guide/<שם> הוא מסך "מאחורי הקלעים", וכל כתובת אחרת היא האפליקציה עצמה
+  const backstageIndex = GUIDE_STEPS.findIndex((item) => item.backstage && item.route === pathname)
+  useEffect(() => {
+    if (backstageIndex >= 0 && (!guide.on || guide.step !== backstageIndex)) guide.go(backstageIndex)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backstageIndex])
 
-  if (!guide.on) {
+  if (!guide.on && backstageIndex < 0) {
     return (
       <div className="h-dvh">
         <AppShell compact={false} />
         <button
           onClick={() => guide.open()}
-          className="fixed bottom-4 left-4 z-30 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#111] shadow-lg ring-2 ring-[#f0d060] transition hover:scale-105"
+          className="fixed bottom-4 left-4 z-30 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#111] shadow-lg ring-2 ring-[#f0d060] transition hover:shadow-xl"
         >
           <GraduationCap className="size-4" aria-hidden /> מדריך בנייה
         </button>
@@ -94,8 +100,8 @@ export function Layout() {
     )
   }
 
-  const step = GUIDE_STEPS[guide.step]
-  const backstage = Boolean(step.backstage)
+  const backstage = backstageIndex >= 0
+  const step = GUIDE_STEPS[backstage ? backstageIndex : guide.step]
 
   // מצב הדרכה: המדריך הבהיר מימין, והאפליקציה החיה בתוך מסגרת דפדפן משמאל
   return (
@@ -114,7 +120,7 @@ export function Layout() {
               <i className="size-2.5 rounded-full bg-[#27c93f]" />
             </span>
             <span dir="ltr" className="flex-1 truncate rounded bg-[#1a1a1a] px-3 py-1 text-center text-[11px] text-[#aaa]">
-              {backstage ? 'מאחורי הקלעים' : `${window.location.host}${pathname === '/' ? '' : pathname}`}
+              {backstage ? 'מאחורי הקלעים' : `${window.location.host}${pathname}`}
             </span>
           </div>
           <div className="min-h-0 flex-1">{backstage ? <Backstage step={step} /> : <AppShell compact />}</div>
