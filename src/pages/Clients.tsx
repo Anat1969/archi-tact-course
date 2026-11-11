@@ -1,96 +1,69 @@
 import { Plus, Search } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ClientForm } from '@/components/ClientForm'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useStore } from '@/lib/store'
+import { formatShekel } from '@/lib/utils'
 
 export function Clients() {
-  const { clients, projects, addClient } = useStore()
+  const { clients, projects } = useStore()
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [formOpen, setFormOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const term = query.trim()
-  const visible = clients.filter(
-    (c) => !term || c.name.includes(term) || (c.phone ?? '').includes(term) || (c.email ?? '').includes(term),
-  )
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    try {
-      await addClient({
-        name: String(form.get('name')),
-        phone: String(form.get('phone')) || null,
-        email: String(form.get('email')) || null,
-      })
-      setFormOpen(false)
-      setError(null)
-    } catch (err) {
-      setError(`השמירה נכשלה: ${(err as Error).message}`)
-    }
-  }
+  const visible = clients.filter((c) => !term || c.name.includes(term) || (c.phone ?? '').includes(term) || (c.email ?? '').includes(term))
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-52 flex-1">
           <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="חיפוש לפי שם, טלפון או מייל"
-            aria-label="חיפוש לקוחות"
-            className="pr-9"
-          />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="חיפוש לפי שם, טלפון או מייל" aria-label="חיפוש לקוחות" className="pr-9" />
         </div>
-        <Button onClick={() => setFormOpen((v) => !v)}>
-          <Plus aria-hidden />
-          לקוח חדש
+        <Button onClick={() => setFormOpen(true)}>
+          <Plus aria-hidden /> לקוח חדש
         </Button>
       </div>
 
-      {formOpen && (
-        <Card>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Input name="name" placeholder="שם הלקוח" aria-label="שם הלקוח" required />
-              <Input name="phone" type="tel" dir="ltr" placeholder="טלפון" aria-label="טלפון" className="text-right" />
-              <Input name="email" type="email" dir="ltr" placeholder="מייל" aria-label="מייל" className="text-right" />
-              <Button type="submit">שמירה</Button>
-            </form>
-            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          </CardContent>
-        </Card>
-      )}
+      <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-right text-muted-foreground">
+              <th className="px-4 py-3 font-medium">שם</th>
+              <th className="px-4 py-3 font-medium">טלפון</th>
+              <th className="px-4 py-3 font-medium">מייל</th>
+              <th className="px-4 py-3 font-medium">פרויקטים</th>
+              <th className="px-4 py-3 font-medium">היקף</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((client) => {
+              const own = projects.filter((p) => p.client_id === client.id)
+              return (
+                <tr
+                  key={client.id}
+                  onClick={() => navigate(`/clients/${client.id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/clients/${client.id}`)}
+                  tabIndex={0}
+                  className="cursor-pointer border-b border-border/60 transition-colors last:border-0 hover:bg-accent focus:bg-accent focus:outline-none"
+                >
+                  <td className="px-4 py-3 font-semibold">{client.name}</td>
+                  <td className="px-4 py-3"><span dir="ltr">{client.phone ?? ''}</span></td>
+                  <td className="px-4 py-3"><span dir="ltr">{client.email ?? ''}</span></td>
+                  <td className="px-4 py-3 tabular-nums">{own.length}</td>
+                  <td className="px-4 py-3 tabular-nums">{formatShekel(own.reduce((sum, p) => sum + Number(p.budget), 0))}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+        {visible.length === 0 && <p className="py-10 text-center text-muted-foreground">לא נמצאו לקוחות שמתאימים לחיפוש.</p>}
+      </div>
 
-      <Card>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-right">שם</TableHead>
-                <TableHead className="text-right">טלפון</TableHead>
-                <TableHead className="text-right">מייל</TableHead>
-                <TableHead className="text-right">פרויקטים</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visible.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.name}</TableCell>
-                  <TableCell><span dir="ltr">{client.phone ?? ''}</span></TableCell>
-                  <TableCell><span dir="ltr">{client.email ?? ''}</span></TableCell>
-                  <TableCell className="tabular-nums">{projects.filter((p) => p.client_id === client.id).length}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {visible.length === 0 && <p className="py-10 text-center text-muted-foreground">לא נמצאו לקוחות שמתאימים לחיפוש.</p>}
-        </CardContent>
-      </Card>
+      {formOpen && <ClientForm clientId={null} onClose={(id) => { setFormOpen(false); if (id) navigate(`/clients/${id}`) }} />}
     </div>
   )
 }
