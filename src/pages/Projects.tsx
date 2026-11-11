@@ -56,7 +56,7 @@ export function Projects() {
             <Link
               key={project.id}
               to={`/projects/${project.id}`}
-              className="group rounded-xl bg-card p-4 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary"
+              className="group rounded-xl bg-card p-4 ring-1 ring-border transition hover:ring-primary"
             >
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-semibold leading-snug group-hover:text-primary">{project.name}</h3>

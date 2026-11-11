@@ -7,6 +7,7 @@ import { StoreProvider } from '@/lib/store'
 import { ClientDetail } from '@/pages/ClientDetail'
 import { Clients } from '@/pages/Clients'
 import { Dashboard } from '@/pages/Dashboard'
+import { Home } from '@/pages/Home'
 import { ProjectDetail } from '@/pages/ProjectDetail'
 import { Projects } from '@/pages/Projects'
 import { Tasks } from '@/pages/Tasks'
@@ -20,7 +21,7 @@ function GuideEntry() {
     guide.open()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  return <Navigate to={GUIDE_STEPS[guide.step].route ?? '/'} replace />
+  return <Navigate to={GUIDE_STEPS[guide.step].route} replace />
 }
 
 export default function App() {
@@ -29,9 +30,11 @@ export default function App() {
       <BrowserRouter>
         <GuideProvider>
           <Routes>
+            <Route index element={<Home />} />
             <Route path="guide" element={<GuideEntry />} />
             <Route element={<Layout />}>
-              <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="guide/:key" element={null} />
               <Route path="projects" element={<Projects />} />
               <Route path="projects/:id" element={<ProjectDetail />} />
               <Route path="clients" element={<Clients />} />

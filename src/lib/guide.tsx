@@ -39,8 +39,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     (step: number) => {
       const index = Math.min(Math.max(step, 0), GUIDE_STEPS.length - 1)
       update({ on: true, step: index })
-      const route = GUIDE_STEPS[index].route
-      if (route) navigate(route)
+      navigate(GUIDE_STEPS[index].route)
     },
     [navigate, update],
   )
