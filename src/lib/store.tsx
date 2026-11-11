@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { demoClients, demoDocuments, demoProjects, demoTasks } from '@/data/demo'
-import { supabase } from '@/lib/supabase'
+import { supabase, table } from '@/lib/supabase'
 import type { Client, DocumentRecord, Project, Task, TaskStage } from '@/types'
 
 type Source = 'demo' | 'supabase'
@@ -35,10 +35,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!supabase) return
     const db = supabase
     Promise.all([
-      db.from('clients').select('*').order('created_at'),
-      db.from('projects').select('*').order('created_at'),
-      db.from('tasks').select('*').order('created_at'),
-      db.from('documents').select('*').order('created_at'),
+      db.from(table('clients')).select('*').order('created_at'),
+      db.from(table('projects')).select('*').order('created_at'),
+      db.from(table('tasks')).select('*').order('created_at'),
+      db.from(table('documents')).select('*').order('created_at'),
     ]).then(([c, p, t, d]) => {
       const failed = [c, p, t, d].find((r) => r.error)
       if (failed?.error) {
@@ -56,7 +56,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addClient = useCallback<Store['addClient']>(async (input) => {
     let row: Client = { ...localRow(), ...input }
     if (supabase) {
-      const { data, error } = await supabase.from('clients').insert(input).select().single()
+      const { data, error } = await supabase.from(table('clients')).insert(input).select().single()
       if (error) throw new Error(error.message)
       row = data as Client
     }
@@ -67,7 +67,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addProject = useCallback<Store['addProject']>(async (input) => {
     let row: Project = { ...localRow(), ...input }
     if (supabase) {
-      const { data, error } = await supabase.from('projects').insert(input).select().single()
+      const { data, error } = await supabase.from(table('projects')).insert(input).select().single()
       if (error) throw new Error(error.message)
       row = data as Project
     }
@@ -77,7 +77,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const moveTask = useCallback<Store['moveTask']>(async (id, stage) => {
     if (supabase) {
-      const { error } = await supabase.from('tasks').update({ stage }).eq('id', id)
+      const { error } = await supabase.from(table('tasks')).update({ stage }).eq('id', id)
       if (error) throw new Error(error.message)
     }
     setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, stage } : task)))
@@ -86,7 +86,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addDocument = useCallback<Store['addDocument']>(async (input) => {
     let row: DocumentRecord = { ...localRow(), ...input }
     if (supabase) {
-      const { data, error } = await supabase.from('documents').insert(input).select().single()
+      const { data, error } = await supabase.from(table('documents')).insert(input).select().single()
       if (error) throw new Error(error.message)
       row = data as DocumentRecord
     }
